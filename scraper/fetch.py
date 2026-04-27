@@ -39,7 +39,7 @@ CAD_ZIP_URL = (
     "2026/PreliminaryDataReal/2026preliminaryDataReal.zip"
 )
 
-LOOKBACK_DAYS   = 30
+LOOKBACK_DAYS   = 7
 PAGE_LIMIT      = 250
 REQUEST_TIMEOUT = 300
 
