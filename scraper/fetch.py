@@ -38,9 +38,8 @@ CAD_ZIP_URL = (
     "https://dentoncad.net/data/_uploaded/files/datafiles/"
     "2026/PreliminaryDataReal/2026preliminaryDataReal.zip"
 )
-CAD_FILE    = "2026-04-13_2026_APPRAISAL_INFO.TXT"
 
-LOOKBACK_DAYS   = 30
+LOOKBACK_DAYS   = 7
 PAGE_LIMIT      = 250
 REQUEST_TIMEOUT = 300
 
@@ -80,14 +79,14 @@ ENTITY_FILTERS = (
 )
 
 # ── Fixed-width column positions (0-based) ────────────────────────────────────
-# Confirmed from APPRAISAL_INFO.TXT sample rows
 ACCT_S,  ACCT_E  = 596,  608
 NAME_S,  NAME_E  = 608,  658
 ADDR_S,  ADDR_E  = 693,  743
 CITY_S,  CITY_E  = 873,  923
 STAT_S,  STAT_E  = 923,  925
 ZIP_S,   ZIP_E   = 978,  987
-SITUS_S, SITUS_E = 1049, 1099
+SNUM_S,  SNUM_E  = 4443, 4463   # situs street number
+SITUS_S, SITUS_E = 1049, 1099   # situs street name
 SCITY_S, SCITY_E = 1109, 1139
 SZIP_S,  SZIP_E  = 1139, 1149
 PCLS_S,  PCLS_E  = 2731, 2741   # "A1" = residential
@@ -163,8 +162,7 @@ def build_parcel_lookup() -> dict:
         resp.raise_for_status()
         log.info(f"  Downloaded {len(resp.content)/1_048_576:.1f} MB")
 
-        zf  = zipfile.ZipFile(io.BytesIO(resp.content))
-        # Find the APPRAISAL_INFO file inside the ZIP
+        zf    = zipfile.ZipFile(io.BytesIO(resp.content))
         fname = next(
             (n for n in zf.namelist() if "APPRAISAL_INFO" in n.upper()),
             None
@@ -191,7 +189,8 @@ def build_parcel_lookup() -> dict:
             mail_city  = line[CITY_S:CITY_E].strip()
             mail_state = line[STAT_S:STAT_E].strip() or "TX"
             mail_zip   = line[ZIP_S:ZIP_E].strip()[:5]
-            situs_st   = line[SITUS_S:SITUS_E].strip()
+            situs_num  = line[SNUM_S:SNUM_E].strip() if len(line) > SNUM_E else ""
+            situs_st   = f"{situs_num} {line[SITUS_S:SITUS_E].strip()}".strip()
             situs_city = line[SCITY_S:SCITY_E].strip()
             situs_zip  = line[SZIP_S:SZIP_E].strip()[:5]
 
